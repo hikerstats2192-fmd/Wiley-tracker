@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wiley Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1520;
+    --parchment: #f5f0e8;
+    --silver: #3d3530;
+    --mid: #5a4e47;
+    --accent: #5a3d5a;
+    --accent-light: #7a5a7a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    padding: 40px 0 60px;
+    position: relative;
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; background: white; border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate; opacity: var(--o);
+  }
+  @keyframes twinkle {
+    from { opacity: var(--o); transform: scale(1); }
+    to { opacity: calc(var(--o) * 0.3); transform: scale(0.7); }
+  }
+  .moon-bg {
+    position: fixed; top: -120px; right: -80px; width: 350px; height: 350px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,223,200,0.12) 0%, rgba(200,191,176,0.05) 50%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .card {
+    position: relative; z-index: 10;
+    background: linear-gradient(160deg, rgba(245,240,232,0.97) 0%, rgba(232,223,200,0.95) 100%);
+    border-radius: 2px; width: min(380px, 95vw);
+    padding: 48px 40px 44px;
+    box-shadow: 0 0 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,191,176,0.3);
+    text-align: center; animation: fadeUp 0.8s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .moon-phase {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    font-family: 'Josefin Sans', sans-serif; font-weight: 300; font-size: 9px;
+    letter-spacing: 0.35em; text-transform: uppercase; color: #c8bb98;
+    background: var(--ink); padding: 5px 16px; border-radius: 1px; white-space: nowrap;
+  }
+
+/* ── Nav ── */
+.nav {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 6px;
+}
+.nav-btn {
+background: none; border: none; cursor: pointer;
+font-size: 18px; color: var(–mid);
+padding: 4px 8px;
+line-height: 1;
+transition: color 0.15s;
+flex: 0 0 auto;
+}
+.nav-btn:hover { color: var(–accent); }
+.nav-btn:disabled { opacity: 0.2; cursor: default; }
+.jump-today {
+display: none;
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 8px;
+letter-spacing: 0.28em; text-transform: uppercase;
+color: var(–parchment); background: var(–accent);
+border: none; border-radius: 1px; padding: 4px 10px;
+cursor: pointer; margin: 0 auto 0; opacity: 0.9;
+transition: opacity 0.2s;
+}
+.jump-today.visible { display: block; }
+.jump-today:hover { opacity: 1; }
+.nav-center { flex: 1; }
+
+.date-line {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 10px;
+letter-spacing: 0.3em; text-transform: uppercase; color: var(–mid); margin-bottom: 4px;
+}
+.full-date {
+font-size: 30px; font-weight: 300; color: var(–ink); line-height: 1.1; margin-bottom: 4px;
+}
+.cycle-day {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 10px;
+letter-spacing: 0.3em; text-transform: uppercase; color: var(–accent); margin-bottom: 0;
+}
+.today-badge {
+display: inline-block;
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 8px;
+letter-spacing: 0.25em; text-transform: uppercase;
+color: var(–parchment); background: var(–accent);
+padding: 2px 8px; border-radius: 1px; margin-left: 8px;
+position: relative; top: -1px;
+}
+
+.divider {
+width: 60px; height: 1px;
+background: linear-gradient(90deg, transparent, var(–mid), transparent);
+margin: 24px auto 24px;
+}
+.doses { display: flex; flex-direction: column; }
+.dose-row {
+display: flex; align-items: baseline; justify-content: space-between;
+padding: 14px 0; border-bottom: 1px solid rgba(90,61,90,0.15);
+}
+.dose-row:first-child { border-top: 1px solid rgba(90,61,90,0.15); }
+.hormone-label {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 400; font-size: 11px;
+letter-spacing: 0.2em; text-transform: uppercase; color: var(–mid); flex: 0 0 auto;
+}
+.dose-dots {
+flex: 1; margin: 0 16px; border-bottom: 1px dotted rgba(90,61,90,0.2);
+position: relative; top: -3px;
+}
+.dose-value {
+font-size: 28px; font-weight: 300; color: var(–ink); flex: 0 0 auto;
+}
+.dose-unit {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 9px;
+letter-spacing: 0.2em; color: var(–mid); margin-left: 5px; position: relative; top: -2px;
+}
+
+.card.full-moon-day { background: linear-gradient(160deg, rgba(245,240,232,0.98) 0%, rgba(240,230,210,0.96) 100%); }
+.full-moon-glow {
+display: none; position: absolute; inset: -2px; border-radius: 4px;
+background: transparent; box-shadow: 0 0 30px rgba(232,223,200,0.4), 0 0 60px rgba(200,191,176,0.15);
+pointer-events: none; z-index: -1;
+}
+.card.full-moon-day .full-moon-glow { display: block; }
+
+.next-moon {
+margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(90,61,90,0.15);
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 9px;
+letter-spacing: 0.28em; text-transform: uppercase; color: var(–mid);
+}
+.next-moon span { color: var(–accent); font-weight: 400; }
+
+/* ── Travel ── */
+.travel-section { margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(90,61,90,0.2); }
+.travel-toggle {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 9px;
+letter-spacing: 0.3em; text-transform: uppercase; color: var(–mid);
+background: none; border: none; cursor: pointer; padding: 0;
+display: flex; align-items: center; gap: 8px; margin: 0 auto; transition: color 0.2s;
+}
+.travel-toggle:hover { color: var(–accent); }
+.travel-toggle .arrow { display: inline-block; transition: transform 0.25s; font-size: 8px; }
+.travel-toggle.open .arrow { transform: rotate(90deg); }
+.travel-form { display: none; margin-top: 18px; flex-direction: column; gap: 12px; }
+.travel-form.visible { display: flex; }
+.date-inputs { display: flex; gap: 10px; }
+.date-field { flex: 1; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+.date-field label {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 8px;
+letter-spacing: 0.3em; text-transform: uppercase; color: var(–mid);
+}
+.date-field input[type=“date”] {
+background: rgba(26,21,32,0.06); border: 1px solid rgba(90,61,90,0.3);
+border-radius: 1px; padding: 8px 10px;
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 11px;
+color: var(–ink); width: 100%; outline: none; -webkit-appearance: none;
+}
+.date-field input[type=“date”]:focus { border-color: rgba(90,61,90,0.6); }
+.calc-btn {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 9px;
+letter-spacing: 0.3em; text-transform: uppercase; color: var(–parchment);
+background: var(–accent); border: none; border-radius: 1px; padding: 11px 20px;
+cursor: pointer; opacity: 0.9; transition: opacity 0.2s;
+}
+.calc-btn:hover { opacity: 1; }
+.travel-result { display: none; margin-top: 4px; padding-top: 16px; border-top: 1px solid rgba(90,61,90,0.15); }
+.travel-result.visible { display: block; }
+.travel-result-label {
+font-family: ‘Josefin Sans’, sans-serif; font-weight: 300; font-size: 8px;
+letter-spacing: 0.3em; text-transform: uppercase; color: var(–mid); margin-bottom: 14px;
+}
+.travel-dose-row {
+display: flex; align-items: baseline; justify-content: space-between;
+padding: 10px 0; border-bottom: 1px solid rgba(90,61,90,0.12);
+}
+.travel-dose-row:first-child { border-top: 1px solid rgba(90,61,90,0.12); }
+.travel-dose-value { font-size: 22px; font-weight: 300; color: var(–ink); }
+.travel-error { font-size: 12px; font-style: italic; color: #9b5c5c; margin-top: 8px; }
+</style>
+
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="moon-bg"></div>
+
+<div class="card" id="card">
+  <div class="full-moon-glow"></div>
+  <div class="moon-phase" id="moonPhaseLabel">Wiley Protocol</div>
+
+  <div class="nav">
+    <button class="nav-btn" id="prevBtn" onclick="shiftDay(-1)">&#8592;</button>
+    <div class="nav-center">
+      <div class="date-line" id="dayOfWeek">—</div>
+      <div class="full-date" id="fullDate">—</div>
+      <div class="cycle-day" id="cycleDayLabel">—</div>
+    </div>
+    <button class="nav-btn" id="nextBtn" onclick="shiftDay(1)">&#8594;</button>
+  </div>
+
+  <div class="divider"></div>
+  <button class="jump-today" id="jumpToday" onclick="jumpToday()">↩ back to today</button>
+  <div class="doses" id="dosesContainer"></div>
+  <div class="next-moon" id="nextMoonInfo"></div>
+
+  <div class="travel-section">
+    <button class="travel-toggle" id="travelToggle" onclick="toggleTravel()">
+      <span class="arrow">▶</span> Travel calculator
+    </button>
+    <div class="travel-form" id="travelForm">
+      <div class="date-inputs">
+        <div class="date-field"><label>Depart</label><input type="date" id="departDate"></div>
+        <div class="date-field"><label>Return</label><input type="date" id="returnDate"></div>
+      </div>
+      <button class="calc-btn" onclick="calcTravel()">Calculate</button>
+      <div class="travel-result" id="travelResult">
+        <div class="travel-result-label" id="travelDayCount"></div>
+        <div id="travelDoses"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FULL_MOONS = [
+  new Date('2026-03-03'),new Date('2026-04-02'),new Date('2026-05-01'),new Date('2026-05-31'),
+  new Date('2026-06-30'),new Date('2026-07-29'),new Date('2026-08-28'),new Date('2026-09-26'),
+  new Date('2026-10-26'),new Date('2026-11-24'),new Date('2026-12-24'),new Date('2027-01-22'),
+  new Date('2027-02-20'),new Date('2027-03-22'),new Date('2027-04-20'),new Date('2027-05-20'),
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+let offset = 0; // days from today
+
+function today() {
+  const t = new Date();
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+function baseEDose(d) {
+  if(d<=5)return 4; if(d<=8)return 6; if(d<=11)return 7;
+  if(d===12)return 8; if(d<=14)return 2; if(d<=17)return 3; return 4;
+}
+
+function pDoseFromEnd(d) {
+  const m={13:4,12:4,11:8,10:8,9:10,8:10,7:12,6:14,5:12,4:10,3:10,2:8,1:8,0:4};
+  return m[d]||0;
+}
+
+function getDoses(dateObj) {
+  const t = dateObj.getTime();
+  let cs=null, ns=null;
+  for(let i=0;i<FULL_MOONS.length;i++){
+    if(FULL_MOONS[i].getTime()<=t){cs=FULL_MOONS[i];ns=FULL_MOONS[i+1]||null;}
+  }
+  if(!cs) return null;
+  const elapsed = Math.round((t-cs.getTime())/86400000);
+  const cycleDay = elapsed+1;
+  const cycleLength = ns ? Math.round((ns.getTime()-cs.getTime())/86400000) : 28;
+  const padding = Math.max(0, cycleLength-28);
+  const eDose = cycleDay<=5+padding ? 4 : baseEDose(cycleDay-padding);
+  const pDose = pDoseFromEnd(cycleLength-cycleDay);
+  return {cycleDay, cycleLength, eDose, pDose, isFullMoonDay: elapsed===0, nextCycleStart: ns};
+}
+
+function render() {
+  const td = today();
+  const viewDate = new Date(td);
+  viewDate.setDate(viewDate.getDate() + offset);
+
+  const info = getDoses(viewDate);
+  const isToday = offset === 0;
+
+  // Reset card state
+  // Show/hide jump button
+  const jumpBtn = document.getElementById('jumpToday');
+  if (offset !== 0) { jumpBtn.classList.add('visible'); } else { jumpBtn.classList.remove('visible'); }
+
+  const card = document.getElementById('card');
+  card.classList.remove('full-moon-day');
+  document.getElementById('moonPhaseLabel').textContent = 'Wiley Protocol';
+
+  document.getElementById('dayOfWeek').textContent = DAYS[viewDate.getDay()];
+
+  const dateHTML = `${MONTHS[viewDate.getMonth()]} ${viewDate.getDate()}, ${viewDate.getFullYear()}${isToday ? ' <span class="today-badge">today</span>' : ''}`;
+  document.getElementById('fullDate').innerHTML = dateHTML;
+
+  if (!info) { document.getElementById('cycleDayLabel').textContent = 'out of range'; return; }
+
+  document.getElementById('cycleDayLabel').textContent = `Day ${info.cycleDay} of ${info.cycleLength}`;
+
+  if (info.isFullMoonDay) {
+    card.classList.add('full-moon-day');
+    document.getElementById('moonPhaseLabel').textContent = '🌕 Full Moon · Day 1';
+  }
+
+  const c = document.getElementById('dosesContainer');
+  c.innerHTML = `<div class="dose-row"><span class="hormone-label">Estradiol</span><span class="dose-dots"></span><span class="dose-value">${info.eDose}<span class="dose-unit">lines</span></span></div>`;
+  if (info.pDose > 0) {
+    c.innerHTML += `<div class="dose-row"><span class="hormone-label">Progesterone</span><span class="dose-dots"></span><span class="dose-value">${info.pDose}<span class="dose-unit">lines</span></span></div>`;
+  }
+
+  const nextMoonEl = document.getElementById('nextMoonInfo');
+  if (info.nextCycleStart) {
+    const nm = info.nextCycleStart;
+    const daysUntil = Math.round((nm.getTime()-td.getTime())/86400000);
+    if (daysUntil > 0) {
+      nextMoonEl.innerHTML = `Next full moon &nbsp;<span>${MONTHS[nm.getMonth()]} ${nm.getDate()}</span>&nbsp; · in ${daysUntil} day${daysUntil!==1?'s':''}`;
+    } else {
+      nextMoonEl.innerHTML = '';
+    }
+  }
+}
+
+function jumpToday() { offset = 0; render(); }
+
+function shiftDay(dir) {
+  offset += dir;
+  render();
+}
+
+function toggleTravel() {
+  document.getElementById('travelToggle').classList.toggle('open');
+  document.getElementById('travelForm').classList.toggle('visible');
+}
+
+function calcTravel() {
+  const dv = document.getElementById('departDate').value;
+  const rv = document.getElementById('returnDate').value;
+  const resultEl = document.getElementById('travelResult');
+  const dosesEl = document.getElementById('travelDoses');
+  const labelEl = document.getElementById('travelDayCount');
+  dosesEl.innerHTML=''; resultEl.classList.remove('visible');
+
+  if(!dv||!rv){dosesEl.innerHTML='<div class="travel-error">Please enter both dates.</div>';resultEl.classList.add('visible');return;}
+  const [dy,dm,dd]=dv.split('-').map(Number);
+  const [ry,rm,rd]=rv.split('-').map(Number);
+  const depart=new Date(dy,dm-1,dd), ret=new Date(ry,rm-1,rd);
+  if(ret<depart){dosesEl.innerHTML='<div class="travel-error">Return must be after departure.</div>';resultEl.classList.add('visible');return;}
+
+  let totalE=0, totalP=0, cur=new Date(depart);
+  while(cur<=ret){
+    const info=getDoses(cur);
+    if(info){totalE+=info.eDose;totalP+=info.pDose;}
+    cur.setDate(cur.getDate()+1);
+  }
+  const nd=Math.round((ret-depart)/86400000)+1;
+  labelEl.textContent=`${MONTHS_SHORT[depart.getMonth()]} ${depart.getDate()} – ${MONTHS_SHORT[ret.getMonth()]} ${ret.getDate()} · ${nd} day${nd!==1?'s':''}`;
+  dosesEl.innerHTML=`
+    <div class="travel-dose-row"><span class="hormone-label">Estradiol</span><span class="dose-dots"></span><span class="travel-dose-value">${totalE}<span class="dose-unit">lines total</span></span></div>
+    <div class="travel-dose-row"><span class="hormone-label">Progesterone</span><span class="dose-dots"></span><span class="travel-dose-value">${totalP>0?totalP+'<span class="dose-unit">lines total</span>':'<span style="font-size:13px;font-style:italic;color:var(--mid)">none needed</span>'}</span></div>`;
+  resultEl.classList.add('visible');
+}
+
+// Stars
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2+0.5, op=Math.random()*0.6+0.1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--o:${op};animation-delay:${(Math.random()*4).toFixed(1)}s;`;
+    c.appendChild(s);
+  }
+})();
+
+render();
+</script>
+
+</body>
+</html>
